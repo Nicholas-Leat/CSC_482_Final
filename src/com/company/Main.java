@@ -1,8 +1,217 @@
 package com.company;
+import java.util.Random;
 
 public class Main {
+    public static double[][] GenerateRandomCostMatrix(int numVert, int maxEdgeCost){
+        double edgeCost[][] = new double[numVert][numVert];
+        int temp;
+        Random rand = new Random();
+
+        //Populates the edge cost array
+        for(int i = 0; i < numVert; i++){
+            for(int j = 0; j < numVert; j++){
+                if(j != i){
+                    temp = rand.nextInt(maxEdgeCost+1);
+                    edgeCost[i][j] = temp;
+                    edgeCost[j][i] = temp;
+                }else{
+                    edgeCost[i][j] = 0;
+                }
+            }
+        }
+
+        return edgeCost;
+    }
+
+    public static double[][] GenerateRandomEuclideanCostMatrix(int vert, int max){
+        Random rand = new Random();
+        double edgeCost[][] = new double[vert][vert];
+        int x, y;
+        //2d array to hold the location of each vertex
+        int vertexLocation[][] = new int[vert][2];
+
+        //place the vertex randomly on the graph0
+        for(int i = 0; i < vert; i ++) {
+            x = rand.nextInt(max);
+            y = rand.nextInt(max);
+            x++;
+            y++;
+            vertexLocation[i][0] = x;
+            vertexLocation[i][1] = y;
+        }
+        //calculate the distance between
+        for(int i = 0; i < vert; i++){
+            for(int j = 0; j < vert; j++){
+                if(i != j){
+                    edgeCost[i][j] = Math.pow(vertexLocation[i][1] - vertexLocation[j][1],2) + Math.pow(vertexLocation[i][0] - vertexLocation[j][0],2);
+                    if(edgeCost[i][j] < 0){
+                        edgeCost[i][j] = edgeCost[i][j] * -1;
+                    }
+                    edgeCost[i][j] = Math.sqrt(edgeCost[i][j]);
+                    edgeCost[j][i] = edgeCost[i][j];
+                }
+            }
+        }
+
+        return edgeCost;
+    }
+
+    public static double[][] GenerateRandomCircularGraphCostMatrix(int vert, int radius){
+        Random rand = new Random();
+        int x, y;
+        double edgeCost[][] = new double[vert][vert];
+        boolean placedVert[] = new boolean[vert];
+        double vertexLocation[][] = new double[vert][2];
+        double theta = 360/vert;
+
+        for(int i = 0; i < vert; i++){
+            placedVert[i] = false;
+        }
+        int randVert = 0;
+        //calculate the graph position equally around a circle
+        for(int i = 0; i < vert; i++) {
+
+            vertexLocation[randVert][0] = (radius * Math.cos(theta * randVert));//set x location
+            vertexLocation[randVert][1] = (radius * Math.sin(theta * randVert));//set y location
+            placedVert[randVert] = true;
+            if(randVert == vert){
+                vert--;
+            }
+            randVert = rand.nextInt(vert);
+            if(placedVert[randVert] == true) {
+                while (placedVert[randVert] == false) {
+                    randVert = rand.nextInt(vert);
+                }
+            }
+        }
+
+        for(int i = 0; i < vert; i++){
+            for(int j = 0; j < vert; j++){
+                if(i != j){
+                    edgeCost[i][j] = Math.pow(vertexLocation[i][1] - vertexLocation[j][1],2) + Math.pow(vertexLocation[i][0] - vertexLocation[j][0],2);
+                    if(edgeCost[i][j] < 0){
+                        edgeCost[i][j] = edgeCost[i][j] * -1;
+                    }
+                    edgeCost[i][j] = Math.sqrt(edgeCost[i][j]);
+                    edgeCost[j][i] = edgeCost[i][j];
+                }
+            }
+        }
+
+
+        return edgeCost;
+    }
+//************************************Greedy Algorithm*************************
+     public static void greedy(double edgeCost[][], int vert){
+        int next = 0;
+        int current = 0;
+        int set = 0;
+        int cost = 0;
+        int deadEnd = -1;
+        double nextDist = -1;
+        boolean canCon = true;
+        boolean traveled[] = new boolean[vert];
+        int travelList[] = new int[vert];
+        for(int i = 0; i < vert; i++){
+            traveled[i] = false;
+            travelList[i] = 0;
+        }
+        boolean doneTravel = false;
+
+        traveled[0] = true;
+       for(int i = 1; i < vert; i++){
+           if(nextDist == -1){
+               nextDist = edgeCost[0][i];
+               next = i;
+           }else{
+               if(edgeCost[0][i] < nextDist){
+                   next = i;
+                   nextDist = edgeCost[0][i];
+               }
+           }
+       }
+       current = next;
+       nextDist = -1;
+       travelList[1] = current;
+       cost += edgeCost[0][current];
+       traveled[current] = true;
+       set++;
+       while(doneTravel == false){
+           for(int i = 0; i < vert; i++){
+               if(nextDist == -1 && current != i && current != travelList[set]){
+                   nextDist = edgeCost[current][i];
+                   next = i;
+               }else{
+                   if(edgeCost[current][i] < nextDist && traveled[i] == false && i != deadEnd){
+                       next = i;
+                       nextDist = edgeCost[current][i];
+                   }
+               }
+           }
+           for(int i = 0; i < vert; i++){
+               if(traveled[i] != true){
+                   doneTravel = false;
+                   break;
+               }else{
+                   doneTravel = true;
+               }
+           }
+           for(int i = 0; i < vert; i++){
+                if(traveled[i] != true && doneTravel == false){
+                    canCon = true;
+                    current = next;
+                    nextDist = -1;
+                    travelList[set] = current;
+                    cost += edgeCost[travelList[set]][current];
+                    traveled[current] = true;
+                    set++;
+                    break;
+                }else{
+                    canCon = false;
+                }
+           }
+           if(canCon == false){
+               traveled[current] = false;
+               travelList[set] = 0;
+               cost -= edgeCost[travelList[set]][current];
+               set--;
+               current = travelList[set];
+               deadEnd = current;
+
+           }
+           if(set == vert){
+               break;
+           }
+       }
+       System.out.println("Greedy: ");
+        for(int i = 0; i < vert; i++){
+            System.out.printf("%3d ",travelList[i]);
+        }
+        System.out.printf("\nNum verts: %d\n ", vert);
+        System.out.printf("Cost: %d\n", cost);
+
+     }
+//*****************************************************************************
 
     public static void main(String[] args) {
-	// write your code here
+        Random rand = new Random();
+        int vert = rand.nextInt(19);
+        vert++;
+        double edgeCost[][] = new double[vert][vert];
+
+        edgeCost = GenerateRandomCostMatrix(vert,1000);
+        //edgeCost = GenerateRandomEuclideanCostMatrix(vert,1000);
+        //edgeCost = GenerateRandomCircularGraphCostMatrix(vert,1000);
+        greedy(edgeCost,vert);
+
+        for(int i = 0; i < vert; i++){
+            for(int j = 0; j < vert; j++){
+                System.out.printf("%5.1f ", edgeCost[i][j]);
+            }
+            System.out.println(" ");
+        }
+
+
+        return;
     }
 }
