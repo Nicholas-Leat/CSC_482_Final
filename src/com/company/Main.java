@@ -2,6 +2,8 @@ package com.company;
 import java.util.Random;
 
 public class Main {
+    public static double LowestCost;
+    public static int[] LowestPath;
     public static double[][] GenerateRandomCostMatrix(int numVert, int maxEdgeCost){
         double edgeCost[][] = new double[numVert][numVert];
         double temp;
@@ -180,15 +182,78 @@ public class Main {
 //*****************************************************************************
 //*******************************Brute Force Algorithm*************************
     public static void bruteForce(double edgeCost[][], int vert){
+        long val = 1;
+        for(int i = 2; i < vert-1; i++){
+            val = val * i;
+        }
 
-        int travelList[] = new int[vert];
         int finalList[] = new int[vert];
+        for(int i = 0; i < vert; i++){
+            finalList[i] = i;
+        }
+        //double cost = calccost(edgeCost,finalList,vert);
+
+        finalList = permutation(edgeCost,finalList,1,vert-1,vert);
+        double cost = calccost(edgeCost,finalList,vert);
+
+
+
+
+
+
+
+        System.out.println("Brute Force: ");
+        for(int i = 0; i < vert; i++){
+            System.out.printf("%3d ",finalList[i]);
+        }
+        System.out.println("   0 ");
+        System.out.printf("Num verts: %d\n", vert);
+        System.out.printf("Cost: %.2f\n", cost);
+    }
+    public static int[] permutation(double edgeCost[][], int[] nodes, int l, int r,int vert){
+
+        if(l == r){
+            double cost = calccost(edgeCost,nodes,vert);
+            if(cost < LowestCost){
+                LowestCost = cost;
+                LowestPath = nodes;
+            }
+        }else{
+            for(int i = l; i <=r; i++){
+                nodes = swap(nodes,l,i);
+                nodes = permutation(edgeCost,nodes,l+1,r,vert);
+                nodes = swap(nodes,l,i);
+            }
+        }
+        return nodes;
+    }
+    public static int[] swap(int[] nodes,int l, int i){
+        int temp = nodes[l];
+        nodes[l] = nodes[i];
+        nodes[i] = temp;
+
+
+        return nodes;
+    }
+    public static double calccost(double[][] edgeCost,int[] nodes, int vert){
         double cost = 0;
-        double lowCost = -1;
+
+        for(int i = 0; i < vert; i++){
+            if( i == vert-1){
+                cost+= edgeCost[nodes[i]][nodes[0]];
+            }else{
+                cost +=edgeCost[nodes[i]][nodes[i+1]];
+            }
+        }
 
 
-
-
+        return cost;
+    }
+//*****************************************************************************
+//**************************************Dynamic Algorithm**********************
+    public static void dynamic(double edgeCost[][], int vert){
+        int travelList[] = new int[vert];
+        int cost = 0;
 
 
 
@@ -201,10 +266,9 @@ public class Main {
         System.out.printf("Cost: %.2f\n", cost);
     }
 //*****************************************************************************
-
     public static void main(String[] args) {
         Random rand = new Random();
-        int vert = rand.nextInt(19);
+        int vert = rand.nextInt(15);
         vert++;
         double edgeCost[][] = new double[vert][vert];
 
