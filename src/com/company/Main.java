@@ -3,7 +3,8 @@ import java.util.Random;
 
 public class Main {
     public static double LowestCost;
-    public static int[] LowestPath;
+    public static int[] LowestPath = new int[15];
+    public static int timesRun = 0;
     public static double[][] GenerateRandomCostMatrix(int numVert, int maxEdgeCost){
         double edgeCost[][] = new double[numVert][numVert];
         double temp;
@@ -191,15 +192,14 @@ public class Main {
         for(int i = 0; i < vert; i++){
             finalList[i] = i;
         }
+
+
+        LowestCost = calccost(edgeCost,finalList,vert);
         //double cost = calccost(edgeCost,finalList,vert);
 
         finalList = permutation(edgeCost,finalList,1,vert-1,vert);
-        double cost = calccost(edgeCost,finalList,vert);
-
-
-
-
-
+        //finalList = LowestPath;
+        double cost = LowestCost;
 
 
         System.out.println("Brute Force: ");
@@ -210,10 +210,11 @@ public class Main {
         System.out.printf("Num verts: %d\n", vert);
         System.out.printf("Cost: %.2f\n", cost);
     }
-    public static int[] permutation(double edgeCost[][], int[] nodes, int l, int r,int vert){
 
+    public static int[] permutation(double edgeCost[][], int[] nodes, int l, int r,int vert){
+        double cost = calccost(edgeCost,nodes,vert);
         if(l == r){
-            double cost = calccost(edgeCost,nodes,vert);
+            cost = calccost(edgeCost,nodes,vert);
             if(cost < LowestCost){
                 LowestCost = cost;
                 LowestPath = nodes;
@@ -221,10 +222,23 @@ public class Main {
         }else{
             for(int i = l; i <=r; i++){
                 nodes = swap(nodes,l,i);
+                cost = calccost(edgeCost,nodes,vert);
+                if(cost < LowestCost){
+                    LowestCost = cost;
+                    LowestPath = nodes;
+                }
                 nodes = permutation(edgeCost,nodes,l+1,r,vert);
-                nodes = swap(nodes,l,i);
+                cost = calccost(edgeCost,nodes,vert);
+                if(cost < LowestCost){
+                    LowestCost = cost;
+                    LowestPath = nodes;
+                }
+                //nodes = swap(nodes,l,i);
+
+
             }
         }
+
         return nodes;
     }
     public static int[] swap(int[] nodes,int l, int i){
@@ -271,6 +285,7 @@ public class Main {
         int vert = rand.nextInt(15);
         vert++;
         double edgeCost[][] = new double[vert][vert];
+
 
         edgeCost = GenerateRandomCostMatrix(vert,1000);
         //edgeCost = GenerateRandomEuclideanCostMatrix(vert,1000);
